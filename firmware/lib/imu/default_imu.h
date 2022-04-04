@@ -242,7 +242,7 @@ class MPU9250IMU: public IMUInterface
         bool startSensor() override
         {
             Wire.begin();
-            bool ret;
+            /*bool ret;
             accelerometer_.initialize();
             ret = accelerometer_.testConnection();
             if(!ret)
@@ -253,15 +253,22 @@ class MPU9250IMU: public IMUInterface
             if(!ret)
                 return false;
 
+            return true;*/
+            if (!accelerometer_.setup(0x68)){
+                return false;
+            }
             return true;
+
         }
 
         geometry_msgs__msg__Vector3 readAccelerometer() override
         {
             int16_t ax, ay, az;
             
-            accelerometer_.getAcceleration(&ax, &ay, &az);
-
+            //accelerometer_.getAcceleration(&ax, &ay, &az);
+            ax = accelerometer_.getAccX();
+            ay = accelerometer_.getAccY();
+            az = accelerometer_.getAccZ();
             accel_.x = ax * (double) accel_scale_ * g_to_accel_;
             accel_.y = ay * (double) accel_scale_ * g_to_accel_;
             accel_.z = az * (double) accel_scale_ * g_to_accel_;
@@ -273,8 +280,10 @@ class MPU9250IMU: public IMUInterface
         {
             int16_t gx, gy, gz;
 
-            gyroscope_.getRotation(&gx, &gy, &gz);
-
+            //gyroscope_.getRotation(&gx, &gy, &gz);
+            gx = gyroscope_.getRoll();
+            gy = gyroscope_.getPitch();
+            gz = gyroscope_.getYaw();
             gyro_.x = gx * (double) gyro_scale_ * DEG_TO_RAD;
             gyro_.y = gy * (double) gyro_scale_ * DEG_TO_RAD;
             gyro_.z = gz * (double) gyro_scale_ * DEG_TO_RAD;
