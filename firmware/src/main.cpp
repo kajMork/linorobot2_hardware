@@ -197,6 +197,7 @@ void moveBase()
 void publishData()
 {
     odom_msg = odometry.getData();
+    imu.updateSensor();
     imu_msg = imu.getData();
 
     struct timespec time_stamp = getTime();
