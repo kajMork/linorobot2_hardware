@@ -25,7 +25,7 @@
 #include "HMC5883L.h"
 #include "MPU6050.h"
 #include "MPU9150.h"
-#include "MPU9250.h"
+#include "MPU9250/MPU9250.h"
 
 class GY85IMU: public IMUInterface 
 {
@@ -228,9 +228,9 @@ class MPU9250IMU: public IMUInterface
         const float accel_scale_ = 1 / 16384.0;
         const float gyro_scale_ = 1 / 131.0;
 
-        MPU9250 accelerometer_;
-        MPU9250 gyroscope_;
-
+        //MPU9250 accelerometer_;
+        //MPU9250 gyroscope_;
+        MPU9250 mpu_;
         geometry_msgs__msg__Vector3 accel_;
         geometry_msgs__msg__Vector3 gyro_;
 
@@ -242,6 +242,7 @@ class MPU9250IMU: public IMUInterface
         bool startSensor() override
         {
             Wire.begin();
+            delay(2000);
             /*bool ret;
             accelerometer_.initialize();
             ret = accelerometer_.testConnection();
@@ -254,40 +255,56 @@ class MPU9250IMU: public IMUInterface
                 return false;
 
             return true;*/
-            if (!accelerometer_.setup(0x68)){
+            if (!mpu_.setup(0x68)){
                 return false;
             }
+            //mpu_.verbose(false);
             return true;
 
         }
 
+        void updateSensor() 
+        {
+            while(mpu_.update())
+            {
+                break;
+            }
+            return;
+        }
+
         geometry_msgs__msg__Vector3 readAccelerometer() override
         {
-            int16_t ax, ay, az;
-            
+            //int16_t ax, ay, az;
+            float ax, ay, az;
             //accelerometer_.getAcceleration(&ax, &ay, &az);
-            ax = accelerometer_.getAccX();
-            ay = accelerometer_.getAccY();
-            az = accelerometer_.getAccZ();
-            accel_.x = ax * (double) accel_scale_ * g_to_accel_;
-            accel_.y = ay * (double) accel_scale_ * g_to_accel_;
-            accel_.z = az * (double) accel_scale_ * g_to_accel_;
-
+            mpu_.getAccX(&ax);
+            mpu_.getAccY(&ay);
+            mpu_.getAccZ(&az);
+            //accel_.x = ax * (double) accel_scale_ * g_to_accel_;
+            //accel_.y = ay * (double) accel_scale_ * g_to_accel_;
+            //accel_.z = az * (double) accel_scale_ * g_to_accel_;
+            accel_.x = ax;
+            accel_.y = ay;
+            accel_.z = az;
             return accel_;
         }
 
         geometry_msgs__msg__Vector3 readGyroscope() override
         {
-            int16_t gx, gy, gz;
-
+            //int16_t gx, gy, gz;
+            float gx, gy, gz;
             //gyroscope_.getRotation(&gx, &gy, &gz);
-            gx = gyroscope_.getRoll();
-            gy = gyroscope_.getPitch();
-            gz = gyroscope_.getYaw();
-            gyro_.x = gx * (double) gyro_scale_ * DEG_TO_RAD;
-            gyro_.y = gy * (double) gyro_scale_ * DEG_TO_RAD;
-            gyro_.z = gz * (double) gyro_scale_ * DEG_TO_RAD;
+            mpu_.getRoll(&gx);
+            mpu_.getPitch(&gy);
+            mpu_.getYaw(&gz);
 
+            //gyro_.x = gx * (double) gyro_scale_ * DEG_TO_RAD;
+            //gyro_.y = gy * (double) gyro_scale_ * DEG_TO_RAD;
+            //gyro_.z = gz * (double) gyro_scale_ * DEG_TO_RAD;
+
+            gyro_.x = gx;
+            gyro_.y = gy;
+            gyro_.z = gz;
             return gyro_;
         }
 };
