@@ -42,6 +42,7 @@
 #include <SPI.h>
 
 
+
 #define SS_M4 23
 #define SS_M3 22
 #define SS_M2 21
@@ -85,6 +86,9 @@ geometry_msgs__msg__Twist twist_msg;
 sensor_msgs__msg__Range m_ir_range_msg;
 sensor_msgs__msg__Range l_ir_range_msg;
 sensor_msgs__msg__Range r_ir_range_msg;
+
+//geometry_msgs__msg__Vector3 gyroCalib;
+//geometry_msgs__msg__Vector3 linearCalib;
 
 rclc_executor_t executor;
 rclc_support_t support;
@@ -238,6 +242,7 @@ void irSampling()
 void publishData()
 {
     odom_msg = odometry.getData();
+    imu.updateSensor();
     imu_msg = imu.getData();
     
     irSampling();
@@ -263,6 +268,14 @@ void publishData()
     r_ir_range_msg.max_range = 1;
     r_ir_range_msg.range = distances[2]/1000;
 
+    /*imu_msg.angular_velocity.x -= gyroCalib.x;
+    imu_msg.angular_velocity.y -= gyroCalib.y;
+    imu_msg.angular_velocity.z -= gyroCalib.z;
+
+    imu_msg.linear_acceleration.x -= linearCalib.x;
+    imu_msg.linear_acceleration.y -= linearCalib.y;
+    imu_msg.linear_acceleration.z -= linearCalib.z; */
+    
     struct timespec time_stamp = getTime();
 
     odom_msg.header.stamp.sec = time_stamp.tv_sec;
@@ -334,7 +347,7 @@ void createEntities()
         &imu_publisher, 
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
-        "imu/data"
+        "imu/data2"
     ));
     // create twist command subscriber
     RCCHECK(rclc_subscription_init_best_effort( 
@@ -396,7 +409,8 @@ void fullStop()
 
 
 void setup() 
-{
+{   
+    
     unsigned int configWord;
     // put your setup code here, to run once:
     pinMode(SS_M4, OUTPUT); digitalWrite(SS_M4, HIGH);  // HIGH = not selected
@@ -450,11 +464,15 @@ void setup()
             flashLED(3);
         }
     }
+
     
     micro_ros_init_successful = false;
     set_microros_transports();
     createEntities();
 }
+
+//geometry_msgs__msg__Vector3 gyroCalib = imu.calibrateGyro();
+//geometry_msgs__msg__Vector3 linearCalib = imu.calibrateLinear();
 
 void loop() 
 {
