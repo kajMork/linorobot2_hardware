@@ -27,7 +27,7 @@ class IMUInterface
 
         float accel_cov_ = 0.00001;
         float gyro_cov_ = 0.00001;
-        const int sample_size_ = 40;
+        const int sample_size_ = 10;
 
         geometry_msgs__msg__Vector3 gyro_cal_;
 
@@ -37,6 +37,7 @@ class IMUInterface
 
             for(int i=0; i<sample_size_; i++)
             {
+                updateSensor();
                 gyro = readGyroscope();
                 gyro_cal_.x += gyro.x;
                 gyro_cal_.y += gyro.y;
@@ -49,6 +50,29 @@ class IMUInterface
             gyro_cal_.y = gyro_cal_.y / (float)sample_size_;
             gyro_cal_.z = gyro_cal_.z / (float)sample_size_;
         }
+
+        geometry_msgs__msg__Vector3 linear_cal;
+
+        void calibrateLinear()
+        {
+            geometry_msgs__msg__Vector3 linear;
+
+            for(int i=0; i<sample_size_; i++)
+            {
+                updateSensor();
+                linear = readAccelerometer();
+                linear_cal.x += linear.x;
+                linear_cal.y += linear.y;
+                linear_cal.z += linear.z;
+
+                delay(50);
+            }
+
+            linear_cal.x = (linear_cal.x / (float)sample_size_);
+            linear_cal.y = (linear_cal.y / (float)sample_size_);
+            linear_cal.z = linear_cal.z / (float)sample_size_;
+        }
+
    
     public:
         IMUInterface()
@@ -56,6 +80,7 @@ class IMUInterface
             imu_msg_.header.frame_id = micro_ros_string_utilities_set(imu_msg_.header.frame_id, "imu_link");
         }
 
+        virtual void updateSensor() = 0;
         virtual geometry_msgs__msg__Vector3 readAccelerometer() = 0;
         virtual geometry_msgs__msg__Vector3 readGyroscope() = 0;
         virtual bool startSensor() = 0;
@@ -65,6 +90,7 @@ class IMUInterface
             bool sensor_ok = startSensor();
             if(sensor_ok)
                 calibrateGyro();
+                calibrateLinear();
 
             return sensor_ok;
         }
@@ -72,28 +98,56 @@ class IMUInterface
         sensor_msgs__msg__Imu getData()
         {
             imu_msg_.angular_velocity = readGyroscope();
+            //calibration offset
             imu_msg_.angular_velocity.x -= gyro_cal_.x; 
             imu_msg_.angular_velocity.y -= gyro_cal_.y; 
-            imu_msg_.angular_velocity.z -= gyro_cal_.z; 
+            imu_msg_.angular_velocity.z -= gyro_cal_.z;
 
-            if(imu_msg_.angular_velocity.x > -0.01 && imu_msg_.angular_velocity.x < 0.01 )
-                imu_msg_.angular_velocity.x = 0; 
-         
-            if(imu_msg_.angular_velocity.y > -0.01 && imu_msg_.angular_velocity.y < 0.01 )
+            //Threshold
+            if (imu_msg_.angular_velocity.x < 1 && imu_msg_.angular_velocity.x > -1)
+            {
+                imu_msg_.angular_velocity.x = 0;
+            }
+            if (imu_msg_.angular_velocity.y < 1 && imu_msg_.angular_velocity.y > -1)
+            {
                 imu_msg_.angular_velocity.y = 0;
-
-            if(imu_msg_.angular_velocity.z > -0.01 && imu_msg_.angular_velocity.z < 0.01 )
+            } 
+            if (imu_msg_.angular_velocity.z < 1 && imu_msg_.angular_velocity.z > -1)
+            {
                 imu_msg_.angular_velocity.z = 0;
+            } 
+
+
+            //imu_msg_.angular_velocity.x -= 1.3; 
+            //imu_msg_.angular_velocity.y -= 0.9; 
+            //imu_msg_.angular_velocity.z -= 1.3; 
        
             imu_msg_.angular_velocity_covariance[0] = gyro_cov_;
             imu_msg_.angular_velocity_covariance[4] = gyro_cov_;
             imu_msg_.angular_velocity_covariance[8] = gyro_cov_;
             
             imu_msg_.linear_acceleration = readAccelerometer();
+            //calibration offset
+            imu_msg_.linear_acceleration.x -= linear_cal.x;
+            imu_msg_.linear_acceleration.y -= linear_cal.y;
+            imu_msg_.linear_acceleration.z -= linear_cal.z;
             imu_msg_.linear_acceleration_covariance[0] = accel_cov_;
             imu_msg_.linear_acceleration_covariance[4] = accel_cov_;
             imu_msg_.linear_acceleration_covariance[8] = accel_cov_;
 
+            //Threshold            
+            if (imu_msg_.linear_acceleration.x < 0.02 && imu_msg_.linear_acceleration.x > -0.02)
+            {
+                imu_msg_.linear_acceleration.x = 0;
+            }
+            if (imu_msg_.linear_acceleration.y < 0.06 && imu_msg_.linear_acceleration.y > -0.06)
+            {
+                imu_msg_.linear_acceleration.y = 0;
+            } 
+            if (imu_msg_.linear_acceleration.z < 1 && imu_msg_.linear_acceleration.z > -1)
+            {
+                imu_msg_.linear_acceleration.z = 0;
+            } 
             return imu_msg_;
         }
 };

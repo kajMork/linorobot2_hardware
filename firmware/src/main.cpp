@@ -77,6 +77,9 @@ nav_msgs__msg__Odometry odom_msg;
 sensor_msgs__msg__Imu imu_msg;
 geometry_msgs__msg__Twist twist_msg;
 
+//geometry_msgs__msg__Vector3 gyroCalib;
+//geometry_msgs__msg__Vector3 linearCalib;
+
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
@@ -200,6 +203,14 @@ void publishData()
     imu.updateSensor();
     imu_msg = imu.getData();
 
+    /*imu_msg.angular_velocity.x -= gyroCalib.x;
+    imu_msg.angular_velocity.y -= gyroCalib.y;
+    imu_msg.angular_velocity.z -= gyroCalib.z;
+
+    imu_msg.linear_acceleration.x -= linearCalib.x;
+    imu_msg.linear_acceleration.y -= linearCalib.y;
+    imu_msg.linear_acceleration.z -= linearCalib.z; */
+    
     struct timespec time_stamp = getTime();
 
     odom_msg.header.stamp.sec = time_stamp.tv_sec;
@@ -230,18 +241,18 @@ void createEntities()
     // create node
     RCCHECK(rclc_node_init_default(&node, "linorobot_base_node", "", &support));
     // create odometry publisher
-    RCCHECK(rclc_publisher_init_best_effort( 
+    RCCHECK(rclc_publisher_init_default( 
         &odom_publisher, 
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry),
-        "odom/unfiltered"
+        "odom2"
     ));
     // create IMU publisher
     RCCHECK(rclc_publisher_init_best_effort( 
         &imu_publisher, 
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
-        "imu/data"
+        "imu/data2"
     ));
     // create twist command subscriber
     RCCHECK(rclc_subscription_init_best_effort( 
@@ -303,7 +314,8 @@ void fullStop()
 
 
 void setup() 
-{
+{   
+    
     unsigned int configWord;
     // put your setup code here, to run once:
     pinMode(SS_M4, OUTPUT); digitalWrite(SS_M4, HIGH);  // HIGH = not selected
@@ -349,11 +361,15 @@ void setup()
             flashLED(3);
         }
     }
+
     
     micro_ros_init_successful = false;
     set_microros_transports();
     createEntities();
 }
+
+//geometry_msgs__msg__Vector3 gyroCalib = imu.calibrateGyro();
+//geometry_msgs__msg__Vector3 linearCalib = imu.calibrateLinear();
 
 void loop() 
 {

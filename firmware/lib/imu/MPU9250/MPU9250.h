@@ -282,15 +282,15 @@ public:
     void getAccX(float* ax) const { *ax = a[0]; }
     void getAccY(float* ay) const { *ay = a[1]; }
     void getAccZ(float* az) const { *az =  a[2]; }
-    float getGyroX() const { return g[0]; }
-    float getGyroY() const { return g[1]; }
-    float getGyroZ() const { return g[2]; }
+    void getGyroX(float* gx) const { *gx = g[0]; }
+    void getGyroY(float* gy) const { *gy = g[1]; }
+    void getGyroZ(float* gz) const { *gz = g[2]; }
     float getMagX() const { return m[0]; }
     float getMagY() const { return m[1]; }
     float getMagZ() const { return m[2]; }
-    float getLinearAccX() const { return lin_acc[0]; }
-    float getLinearAccY() const { return lin_acc[1]; }
-    float getLinearAccZ() const { return lin_acc[2]; }
+    void getLinearAccX(float* ax) const { *ax = lin_acc[0]; }
+    void getLinearAccY(float* ay) const { *ay = lin_acc[1]; }
+    void getLinearAccZ(float* az) const { *az = lin_acc[2]; }
 
     float getAccBias(const uint8_t i) const { return (i < 3) ? acc_bias[i] : 0.f; }
     float getGyroBias(const uint8_t i) const { return (i < 3) ? gyro_bias[i] : 0.f; }
