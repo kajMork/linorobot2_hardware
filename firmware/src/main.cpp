@@ -14,6 +14,9 @@
 #include <Arduino.h>
 #include <micro_ros_arduino.h>
 #include <stdio.h>
+#include <OPT3101.h>
+#include <Wire.h>
+#include <string>
 
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
@@ -24,6 +27,7 @@
 #include <sensor_msgs/msg/imu.h>
 #include <geometry_msgs/msg/twist.h>
 #include <geometry_msgs/msg/vector3.h>
+#include <sensor_msgs/msg/range.h>
 
 #include "config.h"
 
@@ -71,10 +75,16 @@ void rclErrorLoop()
 rcl_publisher_t odom_publisher;
 rcl_publisher_t imu_publisher;
 rcl_subscription_t twist_subscriber;
+rcl_publisher_t left_range_publisher;
+rcl_publisher_t middle_range_publisher;
+rcl_publisher_t right_range_publisher;
 
 nav_msgs__msg__Odometry odom_msg;
 sensor_msgs__msg__Imu imu_msg;
 geometry_msgs__msg__Twist twist_msg;
+sensor_msgs__msg__Range m_ir_range_msg;
+sensor_msgs__msg__Range l_ir_range_msg;
+sensor_msgs__msg__Range r_ir_range_msg;
 
 rclc_executor_t executor;
 rclc_support_t support;
@@ -86,6 +96,7 @@ unsigned long long time_offset = 0;
 unsigned long prev_cmd_time = 0;
 unsigned long prev_odom_update = 0;
 bool micro_ros_init_successful = false;
+float distances[3];
 
 Encoder motor1_encoder(MOTOR1_ENCODER_A, MOTOR1_ENCODER_B, COUNTS_PER_REV1, MOTOR1_ENCODER_INV);
 Encoder motor2_encoder(MOTOR2_ENCODER_A, MOTOR2_ENCODER_B, COUNTS_PER_REV2, MOTOR2_ENCODER_INV);
@@ -112,9 +123,23 @@ Kinematics kinematics(
     LR_WHEELS_DISTANCE
 );
 
+
 Odometry odometry;
 IMU imu;
+OPT3101 IR_sensor;
+/*
+char* frameid_l[] = "/left_tri_ir_range_frame";
+char frameid_m[] = "/tri_ir_range_frame";
+char frameid_r[] = "/right_tri_ir_range_frame";
 
+rosidl_runtime_c__String left_tri_ir_range_frame = "/left_tri_ir_range_frame";
+rosidl_runtime_c__String tri_ir_range_frame;
+rosidl_runtime_c__String right_tri_ir_range_frame;
+
+String l_frame = "/left_tri_ir_range_frame";
+String m_frame = "/tri_ir_range_frame";
+String r_frame = "/left_tri_ir_range_frame";
+*/
 
 struct timespec getTime()
 {
@@ -193,10 +218,50 @@ void moveBase()
     );
 }
 
+void irSampling()
+{
+    for (size_t i = 0; i < 3; i++)
+    {
+        while(IR_sensor.isSampleDone())
+        {
+            IR_sensor.readOutputRegs();
+
+            distances[IR_sensor.channelUsed] = IR_sensor.distanceMillimeters;
+
+            IR_sensor.nextChannel();
+            IR_sensor.startSample();
+            break;
+        }
+    }
+}
+ 
 void publishData()
 {
     odom_msg = odometry.getData();
     imu_msg = imu.getData();
+    
+    irSampling();
+    
+    l_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(l_ir_range_msg.header.frame_id , "/left_tri_ir_range_frame");
+    l_ir_range_msg.radiation_type = 1;
+    l_ir_range_msg.field_of_view = 0.872664626;
+    l_ir_range_msg.min_range = 0.010000;
+    l_ir_range_msg.max_range = 1;
+    l_ir_range_msg.range = distances[0]/1000;
+
+    m_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(m_ir_range_msg.header.frame_id , "/tri_ir_range_frame");
+    m_ir_range_msg.radiation_type = 1;
+    m_ir_range_msg.field_of_view = 1.04719755;
+    m_ir_range_msg.min_range = 0.120000;
+    m_ir_range_msg.max_range = 1;
+    m_ir_range_msg.range = distances[1]/1000;
+
+    r_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(r_ir_range_msg.header.frame_id , "/right_tri_ir_range_frame");
+    r_ir_range_msg.radiation_type = 1;
+    r_ir_range_msg.field_of_view = 0.872664626;
+    r_ir_range_msg.min_range = 0.0000;
+    r_ir_range_msg.max_range = 1;
+    r_ir_range_msg.range = distances[2]/1000;
 
     struct timespec time_stamp = getTime();
 
@@ -206,8 +271,20 @@ void publishData()
     imu_msg.header.stamp.sec = time_stamp.tv_sec;
     imu_msg.header.stamp.nanosec = time_stamp.tv_nsec;
 
+    m_ir_range_msg.header.stamp.sec = time_stamp.tv_sec;
+    m_ir_range_msg.header.stamp.nanosec = time_stamp.tv_nsec;
+
+    l_ir_range_msg.header.stamp.sec = time_stamp.tv_sec;
+    l_ir_range_msg.header.stamp.nanosec = time_stamp.tv_nsec;
+
+    r_ir_range_msg.header.stamp.sec = time_stamp.tv_sec;
+    r_ir_range_msg.header.stamp.nanosec = time_stamp.tv_nsec;
+
     RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
     RCSOFTCHECK(rcl_publish(&odom_publisher, &odom_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&left_range_publisher, &l_ir_range_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&middle_range_publisher, &m_ir_range_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&right_range_publisher, &r_ir_range_msg, NULL));
 }
 
 void controlCallback(rcl_timer_t * timer, int64_t last_call_time) 
@@ -228,12 +305,30 @@ void createEntities()
     // create node
     RCCHECK(rclc_node_init_default(&node, "linorobot_base_node", "", &support));
     // create odometry publisher
-    RCCHECK(rclc_publisher_init_best_effort( 
+    RCCHECK(rclc_publisher_init_default( 
         &odom_publisher, 
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry),
-        "odom/unfiltered"
+        "odom"
     ));
+    // create left IR range publisher
+    RCCHECK(rclc_publisher_init_best_effort(
+        &left_range_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        "/tri_ir_sensor/left/range"));
+    // create right IR range publisher
+    RCCHECK(rclc_publisher_init_best_effort(
+        &right_range_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        "/tri_ir_sensor/right/range"));
+    // create middle IR range publisher
+    RCCHECK(rclc_publisher_init_best_effort(
+        &middle_range_publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
+        "/tri_ir_sensor/middle/range"));
     // create IMU publisher
     RCCHECK(rclc_publisher_init_best_effort( 
         &imu_publisher, 
@@ -257,7 +352,7 @@ void createEntities()
         controlCallback
     ));
     executor = rclc_executor_get_zero_initialized_executor();
-    RCCHECK(rclc_executor_init(&executor, &support.context, 2, & allocator));
+    RCCHECK(rclc_executor_init(&executor, &support.context, 10, & allocator));
     RCCHECK(rclc_executor_add_subscription(
         &executor, 
         &twist_subscriber, 
@@ -313,6 +408,14 @@ void setup()
 
     configWord = 0b0000010000001100;
   
+    Wire.begin();
+
+    IR_sensor.init();
+    IR_sensor.setFrameTiming(512);
+    IR_sensor.setChannel(0);
+    IR_sensor.setBrightness(OPT3101Brightness::Adaptive);
+    IR_sensor.startSample();
+
     SPI.begin();
     SPI.setBitOrder(LSBFIRST);
     SPI.setDataMode(SPI_MODE1);  // clock pol = low, phase = high
@@ -373,7 +476,7 @@ void loop()
         else if(micro_ros_init_successful)
         {
             // stop the robot when the agent got disconnected
-            fullStop();
+            fullStop();+
             // clean up micro-ROS components
             destroyEntities();
         }
@@ -384,6 +487,6 @@ void loop()
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
     }
     */
-    rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
+    rclc_executor_spin_some(&executor, RCL_MS_TO_NS(20));
 }
 
