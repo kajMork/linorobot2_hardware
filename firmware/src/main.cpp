@@ -26,6 +26,7 @@
 #include <nav_msgs/msg/odometry.h>
 #include <sensor_msgs/msg/imu.h>
 #include <geometry_msgs/msg/twist.h>
+#include <geometry_msgs/msg/pose_with_covariance_stamped.h>
 #include <geometry_msgs/msg/vector3.h>
 #include <sensor_msgs/msg/range.h>
 
@@ -79,10 +80,12 @@ rcl_subscription_t twist_subscriber;
 rcl_publisher_t left_range_publisher;
 rcl_publisher_t middle_range_publisher;
 rcl_publisher_t right_range_publisher;
+rcl_subscription_t pose_subscriber;
 
 nav_msgs__msg__Odometry odom_msg;
 sensor_msgs__msg__Imu imu_msg;
 geometry_msgs__msg__Twist twist_msg;
+geometry_msgs__msg__PoseWithCovarianceStamped pose_msg;
 sensor_msgs__msg__Range m_ir_range_msg;
 sensor_msgs__msg__Range l_ir_range_msg;
 sensor_msgs__msg__Range r_ir_range_msg;
@@ -91,6 +94,7 @@ sensor_msgs__msg__Range r_ir_range_msg;
 //geometry_msgs__msg__Vector3 linearCalib;
 
 rclc_executor_t executor;
+rclc_executor_t executor_2;
 rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
@@ -140,7 +144,7 @@ rosidl_runtime_c__String left_tri_ir_range_frame = "/left_tri_ir_range_frame";
 rosidl_runtime_c__String tri_ir_range_frame;
 rosidl_runtime_c__String right_tri_ir_range_frame;
 
-String l_frame = "/left_tri_ir_range_frame";
+String l_frame = "/left_tri_ir_range_f90888888888888888888888888888888943xzslrame";
 String m_frame = "/tri_ir_range_frame";
 String r_frame = "/left_tri_ir_range_frame";
 */
@@ -162,6 +166,15 @@ void twistCallback(const void * msgin)
     //digitalWrite(LED_PIN, !digitalRead(LED_PIN));
 
     prev_cmd_time = millis();
+}
+
+void correct_pose_callback(const void * msgin)
+{
+    double percent_pose = 0.8;
+    double pose[2] = {pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y};
+    double orientation[4] = {pose_msg.pose.pose.orientation.w, pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z};
+
+    odometry.update_pose(pose, orientation);
 }
 
 void syncTime()
@@ -250,22 +263,22 @@ void publishData()
     l_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(l_ir_range_msg.header.frame_id , "/left_tri_ir_range_frame");
     l_ir_range_msg.radiation_type = 1;
     l_ir_range_msg.field_of_view = 0.872664626;
-    l_ir_range_msg.min_range = 0.010000;
-    l_ir_range_msg.max_range = 1;
+    l_ir_range_msg.min_range = 0.0;
+    l_ir_range_msg.max_range = 0.75; //1;
     l_ir_range_msg.range = distances[0]/1000;
 
     m_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(m_ir_range_msg.header.frame_id , "/tri_ir_range_frame");
     m_ir_range_msg.radiation_type = 1;
     m_ir_range_msg.field_of_view = 1.04719755;
-    m_ir_range_msg.min_range = 0.120000;
-    m_ir_range_msg.max_range = 1;
+    m_ir_range_msg.min_range = 0.0;
+    m_ir_range_msg.max_range = 0.75;
     m_ir_range_msg.range = distances[1]/1000;
 
     r_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(r_ir_range_msg.header.frame_id , "/right_tri_ir_range_frame");
     r_ir_range_msg.radiation_type = 1;
     r_ir_range_msg.field_of_view = 0.872664626;
-    r_ir_range_msg.min_range = 0.0000;
-    r_ir_range_msg.max_range = 1;
+    r_ir_range_msg.min_range = 0.0;
+    r_ir_range_msg.max_range = 0.75; //1;
     r_ir_range_msg.range = distances[2]/1000;
 
     /*imu_msg.angular_velocity.x -= gyroCalib.x;
@@ -347,7 +360,7 @@ void createEntities()
         &imu_publisher, 
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
-        "imu/data2"
+        "imu/data"
     ));
     // create twist command subscriber
     RCCHECK(rclc_subscription_init_best_effort( 
@@ -355,6 +368,12 @@ void createEntities()
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
         "cmd_vel"
+    ));
+    RCCHECK(rclc_subscription_init_best_effort( 
+        &pose_subscriber, 
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, PoseWithCovarianceStamped),
+        "pose"
     ));
     // create timer for actuating the motors at 50 Hz (1000/20)
     const unsigned int control_timeout = 20;
@@ -373,6 +392,15 @@ void createEntities()
         &twistCallback, 
         ON_NEW_DATA
     ));
+    executor_2 = rclc_executor_get_zero_initialized_executor();
+    RCCHECK(rclc_executor_init(&executor_2, &support.context, 10, & allocator));
+    RCCHECK(rclc_executor_add_subscription(
+        &executor_2, 
+        &pose_subscriber, 
+        &pose_msg, 
+        &correct_pose_callback, 
+        ON_NEW_DATA
+    ));
     RCCHECK(rclc_executor_add_timer(&executor, &control_timer));
     // synchronize time with the agent
     syncTime();
@@ -386,10 +414,15 @@ void destroyEntities()
 
     rcl_publisher_fini(&odom_publisher, &node);
     rcl_publisher_fini(&imu_publisher, &node);
+    rcl_publisher_fini(&left_range_publisher, &node);
+    rcl_publisher_fini(&middle_range_publisher, &node);
+    rcl_publisher_fini(&right_range_publisher, &node);
     rcl_subscription_fini(&twist_subscriber, &node);
+    rcl_subscription_fini(&pose_subscriber, &node);
     rcl_node_fini(&node);
     rcl_timer_fini(&control_timer);
     rclc_executor_fini(&executor);
+    rclc_executor_fini(&executor_2);
     rclc_support_fini(&support);
 
     micro_ros_init_successful = false;
@@ -425,9 +458,9 @@ void setup()
     Wire.begin();
 
     IR_sensor.init();
-    IR_sensor.setFrameTiming(512);
+    IR_sensor.setFrameTiming(256);
     IR_sensor.setChannel(0);
-    IR_sensor.setBrightness(OPT3101Brightness::Adaptive);
+    IR_sensor.setBrightness(OPT3101Brightness::High);
     IR_sensor.startSample();
 
     SPI.begin();
@@ -506,5 +539,6 @@ void loop()
     }
     */
     rclc_executor_spin_some(&executor, RCL_MS_TO_NS(20));
+    rclc_executor_spin_some(&executor_2, RCL_MS_TO_NS(20));
 }
 

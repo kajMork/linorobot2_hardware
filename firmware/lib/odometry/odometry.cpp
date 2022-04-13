@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "odometry.h"
+#include <geometry_msgs/msg/pose_with_covariance_stamped.h>
 
 Odometry::Odometry():
     x_pos_(0.0),
@@ -21,6 +22,22 @@ Odometry::Odometry():
 {
     odom_msg_.header.frame_id = micro_ros_string_utilities_set(odom_msg_.header.frame_id, "odom");
     odom_msg_.child_frame_id = micro_ros_string_utilities_set(odom_msg_.child_frame_id, "base_footprint");
+}
+
+void Odometry::update_pose(double pose[2], double q[4])
+{
+    double q0 = q[0];
+    double q1 = q[1];
+    double q2 = q[2];
+    double q3 = q[3];
+    double yaw = atan2(2*(q0*q3+q1*q2), 1-2*(q2*q2+q3*q3));
+
+    double percent_pose = 0.2;
+    double percent_heading = 0.2;
+    x_pos_ = (x_pos_ * (1 - percent_pose)) + (pose[0] * (percent_pose));
+    y_pos_ = (y_pos_ * (1 - percent_pose)) + (pose[1] * (percent_pose));
+    heading_ = (heading_ * (1 - percent_heading)) + (yaw * (percent_heading));
+
 }
 
 void Odometry::update(float vel_dt, float linear_vel_x, float linear_vel_y, float angular_vel_z)
@@ -34,7 +51,7 @@ void Odometry::update(float vel_dt, float linear_vel_x, float linear_vel_y, floa
     //calculate current position of the robot
     x_pos_ += delta_x;
     y_pos_ += delta_y;
-    heading_ += delta_heading;
+    heading_ += delta_heading*(1/1.5);
 
     //calculate robot's heading in quaternion angle
     //ROS has a function to calculate yaw in quaternion angle
@@ -52,9 +69,9 @@ void Odometry::update(float vel_dt, float linear_vel_x, float linear_vel_y, floa
     odom_msg_.pose.pose.orientation.z = (double) q[3];
     odom_msg_.pose.pose.orientation.w = (double) q[0];
 
-    odom_msg_.pose.covariance[0] = 0.001;
-    odom_msg_.pose.covariance[7] = 0.001;
-    odom_msg_.pose.covariance[35] = 0.001;
+    odom_msg_.pose.covariance[0] = 0.01;
+    odom_msg_.pose.covariance[7] = 0.01;
+    odom_msg_.pose.covariance[35] = 0.01;
 
     //linear speed from encoders
     odom_msg_.twist.twist.linear.x = linear_vel_x;
@@ -64,11 +81,11 @@ void Odometry::update(float vel_dt, float linear_vel_x, float linear_vel_y, floa
     //angular speed from encoders
     odom_msg_.twist.twist.angular.x = 0.0;
     odom_msg_.twist.twist.angular.y = 0.0;
-    odom_msg_.twist.twist.angular.z = angular_vel_z;
+    odom_msg_.twist.twist.angular.z = 0.0;
 
-    odom_msg_.twist.covariance[0] = 0.0001;
-    odom_msg_.twist.covariance[7] = 0.0001;
-    odom_msg_.twist.covariance[35] = 0.0001;
+    odom_msg_.twist.covariance[0] = 0.001;
+    odom_msg_.twist.covariance[7] = 0.001;
+    odom_msg_.twist.covariance[35] = 0.001;
 }
 
 nav_msgs__msg__Odometry Odometry::getData()

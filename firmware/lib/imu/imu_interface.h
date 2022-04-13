@@ -99,24 +99,32 @@ class IMUInterface
         {
             imu_msg_.angular_velocity = readGyroscope();
             //calibration offset
+            /*
             imu_msg_.angular_velocity.x -= gyro_cal_.x; 
             imu_msg_.angular_velocity.y -= gyro_cal_.y; 
             imu_msg_.angular_velocity.z -= gyro_cal_.z;
+            */
+           
+            //Convert to radians 
+            imu_msg_.angular_velocity.x = (imu_msg_.angular_velocity.x - gyro_cal_.x)*PI/180; 
+            imu_msg_.angular_velocity.y = (imu_msg_.angular_velocity.y - gyro_cal_.y)*PI/180; 
+            imu_msg_.angular_velocity.z = (imu_msg_.angular_velocity.z - gyro_cal_.z)*PI/180;
 
+            
             //Threshold
-            if (imu_msg_.angular_velocity.x < 1 && imu_msg_.angular_velocity.x > -1)
+            if (imu_msg_.angular_velocity.x < 0.004 && imu_msg_.angular_velocity.x > -0.004)
             {
                 imu_msg_.angular_velocity.x = 0;
             }
-            if (imu_msg_.angular_velocity.y < 1 && imu_msg_.angular_velocity.y > -1)
+            if (imu_msg_.angular_velocity.y < 0.004 && imu_msg_.angular_velocity.y > -0.004)
             {
                 imu_msg_.angular_velocity.y = 0;
             } 
-            if (imu_msg_.angular_velocity.z < 1 && imu_msg_.angular_velocity.z > -1)
+            if (imu_msg_.angular_velocity.z < 0.004 && imu_msg_.angular_velocity.z > -0.004)
             {
                 imu_msg_.angular_velocity.z = 0;
             } 
-
+            
 
             //imu_msg_.angular_velocity.x -= 1.3; 
             //imu_msg_.angular_velocity.y -= 0.9; 
@@ -136,7 +144,7 @@ class IMUInterface
             imu_msg_.linear_acceleration_covariance[8] = accel_cov_;
 
             //Threshold            
-            if (imu_msg_.linear_acceleration.x < 0.02 && imu_msg_.linear_acceleration.x > -0.02)
+            if (imu_msg_.linear_acceleration.x < 0.04 && imu_msg_.linear_acceleration.x > -0.04)
             {
                 imu_msg_.linear_acceleration.x = 0;
             }
