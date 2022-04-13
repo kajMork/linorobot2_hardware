@@ -51,15 +51,33 @@
 
 #define ENABLE_MOTORS 8
 
+#define CPU_RESTART_ADDR (uint32_t* )0xE000ED0C
+#define CPU_RESTART_VAL 0x5FA0004
+#define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL)
+
+void check_for_reset ()
+{
+    if (Serial.available()) {
+        if (Serial.read() == 'R')
+        {
+            CPU_RESTART;
+        }
+    }
+}
+
 void flashLED(int n_times)
 {
+    check_for_reset();
     for(int i=0; i<n_times; i++)
     {
         digitalWrite(LED_PIN, HIGH);
+        check_for_reset();
         delay(150);
         digitalWrite(LED_PIN, LOW);
+        check_for_reset();
         delay(150);
     }
+    check_for_reset();
     delay(1000);
 }
 
@@ -135,19 +153,6 @@ Kinematics kinematics(
 Odometry odometry;
 IMU imu;
 OPT3101 IR_sensor;
-/*
-char* frameid_l[] = "/left_tri_ir_range_frame";
-char frameid_m[] = "/tri_ir_range_frame";
-char frameid_r[] = "/right_tri_ir_range_frame";
-
-rosidl_runtime_c__String left_tri_ir_range_frame = "/left_tri_ir_range_frame";
-rosidl_runtime_c__String tri_ir_range_frame;
-rosidl_runtime_c__String right_tri_ir_range_frame;
-
-String l_frame = "/left_tri_ir_range_f90888888888888888888888888888888943xzslrame";
-String m_frame = "/tri_ir_range_frame";
-String r_frame = "/left_tri_ir_range_frame";
-*/
 
 struct timespec getTime()
 {
@@ -260,21 +265,21 @@ void publishData()
     
     irSampling();
     
-    l_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(l_ir_range_msg.header.frame_id , "/left_tri_ir_range_frame");
+    l_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(l_ir_range_msg.header.frame_id , "left_tri_ir_range_frame");
     l_ir_range_msg.radiation_type = 1;
     l_ir_range_msg.field_of_view = 0.872664626;
     l_ir_range_msg.min_range = 0.0;
     l_ir_range_msg.max_range = 0.75; //1;
     l_ir_range_msg.range = distances[0]/1000;
 
-    m_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(m_ir_range_msg.header.frame_id , "/tri_ir_range_frame");
+    m_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(m_ir_range_msg.header.frame_id , "tri_ir_range_frame");
     m_ir_range_msg.radiation_type = 1;
     m_ir_range_msg.field_of_view = 1.04719755;
     m_ir_range_msg.min_range = 0.0;
     m_ir_range_msg.max_range = 0.75;
     m_ir_range_msg.range = distances[1]/1000;
 
-    r_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(r_ir_range_msg.header.frame_id , "/right_tri_ir_range_frame");
+    r_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(r_ir_range_msg.header.frame_id , "right_tri_ir_range_frame");
     r_ir_range_msg.radiation_type = 1;
     r_ir_range_msg.field_of_view = 0.872664626;
     r_ir_range_msg.min_range = 0.0;
