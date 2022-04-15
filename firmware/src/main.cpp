@@ -269,21 +269,21 @@ void publishData()
     l_ir_range_msg.radiation_type = 1;
     l_ir_range_msg.field_of_view = 0.872664626;
     l_ir_range_msg.min_range = 0.0;
-    l_ir_range_msg.max_range = 0.75; //1;
+    l_ir_range_msg.max_range = 0.6; //1;
     l_ir_range_msg.range = distances[0]/1000;
 
     m_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(m_ir_range_msg.header.frame_id , "tri_ir_range_frame");
     m_ir_range_msg.radiation_type = 1;
     m_ir_range_msg.field_of_view = 1.04719755;
     m_ir_range_msg.min_range = 0.0;
-    m_ir_range_msg.max_range = 0.75;
+    m_ir_range_msg.max_range = 0.6;
     m_ir_range_msg.range = distances[1]/1000;
 
     r_ir_range_msg.header.frame_id = micro_ros_string_utilities_set(r_ir_range_msg.header.frame_id , "right_tri_ir_range_frame");
     r_ir_range_msg.radiation_type = 1;
     r_ir_range_msg.field_of_view = 0.872664626;
     r_ir_range_msg.min_range = 0.0;
-    r_ir_range_msg.max_range = 0.75; //1;
+    r_ir_range_msg.max_range = 0.6; //1;
     r_ir_range_msg.range = distances[2]/1000;
 
     /*imu_msg.angular_velocity.x -= gyroCalib.x;
