@@ -27,6 +27,7 @@
 #include "MPU9150.h"
 #include "MPU9250/MPU9250.h"
 
+
 class GY85IMU: public IMUInterface 
 {
     private:
@@ -220,6 +221,7 @@ class MPU9150IMU: public IMUInterface
 
             return gyro_;
         }
+
 };
 
 class MPU9250IMU: public IMUInterface 
@@ -234,6 +236,7 @@ class MPU9250IMU: public IMUInterface
         MPU9250 mpu_;
         geometry_msgs__msg__Vector3 accel_;
         geometry_msgs__msg__Vector3 gyro_;
+        geometry_msgs__msg__Quaternion quaternion_;
 
     public:
         MPU9250IMU()
@@ -263,6 +266,11 @@ class MPU9250IMU: public IMUInterface
             mpu_.verbose(false);
             return true;
 
+        }
+
+        void calibrateMagno(const float magBiasX, const float magBiasY,const float magBiasZ,const float magScaleX, const float magScaleY,const float magScaleZ ){
+            mpu_.setMagBias(magBiasX, magBiasY, magBiasZ);
+            mpu_.setMagScale(magScaleX, magScaleY, magScaleZ);
         }
 
 
@@ -315,6 +323,42 @@ class MPU9250IMU: public IMUInterface
             //gyro_.y = gy * (double) gyro_scale_;
             //gyro_.z = gz * (double) gyro_scale_;
             return gyro_;
+        }
+
+        geometry_msgs__msg__Quaternion readQuaternion() override
+        {
+
+            float W,X,Y,Z;
+
+            mpu_.getQuaternionW(&W);
+            mpu_.getQuaternionX(&X);
+            mpu_.getQuaternionY(&Y);
+            mpu_.getQuaternionZ(&Z);
+            quaternion_.w = W;
+            quaternion_.x = X;
+            quaternion_.y = Y;
+            quaternion_.z = Z;
+
+
+
+            /*float yaw, pitch, roll;
+            mpu_.getYaw(&yaw);
+            mpu_.getPitch(&pitch);
+            mpu_.getRoll(&roll);
+
+            double cy = cos(yaw * 0.5);
+            double sy = sin(yaw * 0.5);
+            double cp = cos(pitch * 0.5);
+            double sp = sin(pitch * 0.5);
+            double cr = cos(roll * 0.5);
+            double sr = sin(roll * 0.5);
+            
+            quaternion_.w = cr * cp * cy + sr * sp * sy;
+            quaternion_.x = sr * cp * cy - cr * sp * sy;
+            quaternion_.y = cr * sp * cy + sr * cp * sy;
+            quaternion_.z = cr * cp * sy - sr * sp * cy;*/
+            
+            return quaternion_;
         }
 };
 
