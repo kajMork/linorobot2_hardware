@@ -25,9 +25,17 @@ class IMUInterface
         const float mgauss_to_utesla_ = 0.1;
         const float utesla_to_tesla_ = 0.000001;
 
+        const float magBiasX = -133.9698638916; //-68.7361755371;
+        const float magBiasY = 341.9296264648; //285.8899536133;
+        const float magBiasZ = -66.4373016357;
+
+        const float magScaleX =0.9701530933;
+        const float magScaleY =0.9451101422;
+        const float magScaleZ =0.9451101422;
+
         float accel_cov_ = 0.00001;
         float gyro_cov_ = 0.00001;
-        const int sample_size_ = 10;
+        const int sample_size_ = 50;
 
         geometry_msgs__msg__Vector3 gyro_cal_;
 
@@ -72,7 +80,6 @@ class IMUInterface
             linear_cal.y = (linear_cal.y / (float)sample_size_);
             linear_cal.z = linear_cal.z / (float)sample_size_;
         }
-
    
     public:
         IMUInterface()
@@ -81,8 +88,10 @@ class IMUInterface
         }
 
         virtual void updateSensor() = 0;
+        virtual void calibrateMagno(const float magBiasX, const float magBiasY,const float magBiasZ,const float magScaleX, const float magScaleY,const float magScaleZ) = 0;
         virtual geometry_msgs__msg__Vector3 readAccelerometer() = 0;
         virtual geometry_msgs__msg__Vector3 readGyroscope() = 0;
+        virtual geometry_msgs__msg__Quaternion readQuaternion() = 0;
         virtual bool startSensor() = 0;
 
         bool init()
@@ -91,6 +100,7 @@ class IMUInterface
             if(sensor_ok)
                 calibrateGyro();
                 calibrateLinear();
+                calibrateMagno(magBiasX, magBiasY, magBiasZ, magScaleX, magScaleY, magScaleZ);
 
             return sensor_ok;
         }
@@ -156,6 +166,9 @@ class IMUInterface
             {
                 imu_msg_.linear_acceleration.z = 0;
             } 
+
+            imu_msg_.orientation = readQuaternion();
+
             return imu_msg_;
         }
 };
