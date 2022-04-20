@@ -269,10 +269,10 @@ public:
     float getEulerY() const { return -rpy[1]; }
     float getEulerZ() const { return -rpy[2]; }
 
-    float getQuaternionX() const { return q[1]; }
-    float getQuaternionY() const { return q[2]; }
-    float getQuaternionZ() const { return q[3]; }
-    float getQuaternionW() const { return q[0]; }
+    void getQuaternionX(float* X) const {*X = q[1]; }
+    void getQuaternionY(float* Y) const {*Y = q[2]; }
+    void getQuaternionZ(float* Z) const {*Z = q[3]; }
+    void getQuaternionW(float* W) const {*W = q[0]; }
 
     float getAcc(const uint8_t i) const { return (i < 3) ? a[i] : 0.f; }
     float getGyro(const uint8_t i) const { return (i < 3) ? g[i] : 0.f; }
