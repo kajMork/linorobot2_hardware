@@ -109,20 +109,20 @@ ROBOT ORIENTATION
 #endif 
 
 #ifdef USE_GENERIC_1_IN_MOTOR_DRIVER
-  #define MOTOR1_PWM 7 //Pin no 21 is not a PWM pin on Teensy 4.x, you can use pin no 1 instead.
-  #define MOTOR1_IN_A 2
+  #define MOTOR1_PWM 0 //Pin no 21 is not a PWM pin on Teensy 4.x, you can use pin no 1 instead.
+  #define MOTOR1_IN_A 1
   #define MOTOR1_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
-  #define MOTOR2_PWM 10
+  #define MOTOR2_PWM 2
   #define MOTOR2_IN_A 3
   #define MOTOR2_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
-  #define MOTOR3_PWM 6
-  #define MOTOR3_IN_A 17
+  #define MOTOR3_PWM 4
+  #define MOTOR3_IN_A 5
   #define MOTOR3_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
-  #define MOTOR4_PWM 5
-  #define MOTOR4_IN_A 4
+  #define MOTOR4_PWM 6
+  #define MOTOR4_IN_A 7
   #define MOTOR4_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
   #define PWM_MAX pow(2, PWM_BITS) - 1

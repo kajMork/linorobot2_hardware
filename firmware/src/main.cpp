@@ -47,11 +47,11 @@
 #define SS_M4 23
 #define SS_M3 22
 #define SS_M2 21
-#define SS_M1 9
+#define SS_M1 20
 
 #define ENABLE_MOTORS 8
 
-#define CPU_RESTART_ADDR (uint32_t* )0xE000ED0C
+#define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
 #define CPU_RESTART_VAL 0x5FA0004
 #define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL)
 
@@ -73,9 +73,11 @@ void flashLED(int n_times)
         digitalWrite(LED_PIN, HIGH);
         check_for_reset();
         delay(150);
+        check_for_reset();
         digitalWrite(LED_PIN, LOW);
         check_for_reset();
         delay(150);
+        check_for_reset();
     }
     check_for_reset();
     delay(1000);
