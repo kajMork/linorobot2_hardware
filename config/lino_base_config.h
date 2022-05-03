@@ -57,7 +57,7 @@ ROBOT ORIENTATION
 #define COUNTS_PER_REV3 1920 //1920               // wheel3 encoder's no of ticks per rev
 #define COUNTS_PER_REV4 1920 //1920               // wheel4 encoder's no of ticks per rev
 #define WHEEL_DIAMETER 0.1                // wheel's diameter in meters
-#define LR_WHEELS_DISTANCE 0.4            // distance between left and right wheels
+#define LR_WHEELS_DISTANCE 0.45            // distance between left and right wheels
 #define PWM_BITS 10                          // PWM Resolution of the microcontroller
 #define PWM_FREQUENCY 20000                 // PWM Frequency
 
@@ -68,8 +68,8 @@ ROBOT ORIENTATION
 #define MOTOR4_ENCODER_INV true 
 
 // INVERT MOTOR DIRECTIONS
-#define MOTOR1_INV false
-#define MOTOR2_INV true
+#define MOTOR1_INV true
+#define MOTOR2_INV false
 #define MOTOR3_INV false
 #define MOTOR4_INV true
 
