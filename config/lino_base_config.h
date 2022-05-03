@@ -68,8 +68,8 @@ ROBOT ORIENTATION
 #define MOTOR4_ENCODER_INV true 
 
 // INVERT MOTOR DIRECTIONS
-#define MOTOR1_INV true
-#define MOTOR2_INV false
+#define MOTOR1_INV false
+#define MOTOR2_INV true
 #define MOTOR3_INV false
 #define MOTOR4_INV true
 
