@@ -1,3 +1,4 @@
+This is a fork of the [Linorobot2 hardware repository](https://github.com/linorobot/linorobot2_hardware)
 ## Installation
 All software mentioned in this guide must be installed on the robot computer.
 
