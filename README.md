@@ -152,39 +152,3 @@ Echo IMU data:
     ros2 topic echo /imu/data
 
 
-## URDF
-Once the hardware is done, you can go back to [linorobot2](https://github.com/linorobot/linorobot2#urdf) package and start defining the robot's URDF.
-
-## Troubleshooting Guide
-
-### 1. One of my motor isn't spinning.
-- Check if the motors are powered.
-- Check if you have bad wiring.
-- Check if you have misconfigured the motor's pin assignment in lino_base_config.h.
-- Check if you uncommented the correct motor driver (ie. `USE_GENERIC_2_IN_MOTOR_DRIVER`)
-- Check if you assigned the motor driver pins under the correct motor driver constant. For instance, if you uncommented `USE_GENERIC_2_IN_MOTOR_DRIVER`, all the pins you assigned must be inside the `ifdef USE_GENERIC_2_IN_MOTOR_DRIVER` macro.
-
-### 2. Wrong wheel is spinning during calibration process
-- Check if the motor drivers have been connected to the correct microcontroller pin.
-- Check if you have misconfigured the motor's pin assignment in lino_base_config.h.
-
-### 3 One of my encoders has no reading (0 value).
-- Check if the encoders are powered.
-- Check if you have bad wiring.
-- Check if you have misconfigured the encoder's pin assignment in lino_base_config.h.
-
-### 4. Nothing's printing when I run the screen app.
-- Check if you're passing the correct serial port. Run:
-
-        ls /dev/ttyACM*
-    
-    and ensure that the available serial port matches the port you're passing to the screen app.
-
-- Check if you forgot to [copy the udev rule](https://github.com/linorobot/linorobot2_hardware#3-udev-rule):
-
-        ls /etc/udev/rules.d/00-teensy.rules 
-
-    Remember to restart your computer if you just copied the udev rule.
-
-### 5. The firmware was uploaded but nothing's happening.
-- Check if you're assigning the correct Teensy board when uploading the firmware. If you're unsure which Teensy board you're using, take a look at the label on the biggest chip found in your Teensy board and compare it with the boards shown on PJRC's [website](https://www.pjrc.com/teensy/).
