@@ -150,5 +150,5 @@ Echo odometry data:
 Echo IMU data:
 
     ros2 topic echo /imu/data
-
+## Check the [Wiki](https://github.com/kajMork/linorobot2_hardware/wiki) for further information
 
