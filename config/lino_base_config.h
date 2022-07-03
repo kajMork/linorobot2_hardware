@@ -57,7 +57,7 @@ ROBOT ORIENTATION
 #define COUNTS_PER_REV3 1920 //1920               // wheel3 encoder's no of ticks per rev
 #define COUNTS_PER_REV4 1920 //1920               // wheel4 encoder's no of ticks per rev
 #define WHEEL_DIAMETER 0.1                // wheel's diameter in meters
-#define LR_WHEELS_DISTANCE 0.4            // distance between left and right wheels
+#define LR_WHEELS_DISTANCE 0.45            // distance between left and right wheels
 #define PWM_BITS 10                          // PWM Resolution of the microcontroller
 #define PWM_FREQUENCY 20000                 // PWM Frequency
 
@@ -68,10 +68,10 @@ ROBOT ORIENTATION
 #define MOTOR4_ENCODER_INV true 
 
 // INVERT MOTOR DIRECTIONS
-#define MOTOR1_INV false
-#define MOTOR2_INV true
-#define MOTOR3_INV false
-#define MOTOR4_INV true
+#define MOTOR1_INV true
+#define MOTOR2_INV false
+#define MOTOR3_INV true
+#define MOTOR4_INV false
 
 // ENCODER PINS
 #define MOTOR1_ENCODER_A 14
@@ -109,20 +109,20 @@ ROBOT ORIENTATION
 #endif 
 
 #ifdef USE_GENERIC_1_IN_MOTOR_DRIVER
-  #define MOTOR1_PWM 7 //Pin no 21 is not a PWM pin on Teensy 4.x, you can use pin no 1 instead.
-  #define MOTOR1_IN_A 2
+  #define MOTOR1_PWM 0 //Pin no 21 is not a PWM pin on Teensy 4.x, you can use pin no 1 instead.
+  #define MOTOR1_IN_A 1
   #define MOTOR1_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
-  #define MOTOR2_PWM 10
+  #define MOTOR2_PWM 2
   #define MOTOR2_IN_A 3
   #define MOTOR2_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
-  #define MOTOR3_PWM 6
-  #define MOTOR3_IN_A 17
+  #define MOTOR3_PWM 4
+  #define MOTOR3_IN_A 5
   #define MOTOR3_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
-  #define MOTOR4_PWM 5
-  #define MOTOR4_IN_A 4
+  #define MOTOR4_PWM 6
+  #define MOTOR4_IN_A 7
   #define MOTOR4_IN_B -1 //DON'T TOUCH THIS! This is just a placeholder
 
   #define PWM_MAX pow(2, PWM_BITS) - 1

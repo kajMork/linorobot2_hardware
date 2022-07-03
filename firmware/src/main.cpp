@@ -47,13 +47,19 @@
 #define SS_M4 23
 #define SS_M3 22
 #define SS_M2 21
-#define SS_M1 9
+#define SS_M1 20
 
 #define ENABLE_MOTORS 8
 
-#define CPU_RESTART_ADDR (uint32_t* )0xE000ED0C
+#define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
 #define CPU_RESTART_VAL 0x5FA0004
 #define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL)
+
+// Node namespace (Can remain empty "")
+const char * namespace_node = LINO_NAMESPACE;
+// Node name
+const char * node_name = LINO_NODENAME;
+
 
 void check_for_reset ()
 {
@@ -73,9 +79,11 @@ void flashLED(int n_times)
         digitalWrite(LED_PIN, HIGH);
         check_for_reset();
         delay(150);
+        check_for_reset();
         digitalWrite(LED_PIN, LOW);
         check_for_reset();
         delay(150);
+        check_for_reset();
     }
     check_for_reset();
     delay(1000);
@@ -330,11 +338,12 @@ void controlCallback(rcl_timer_t * timer, int64_t last_call_time)
 
 void createEntities()
 {
+
     allocator = rcl_get_default_allocator();
     //create init_options
     RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
     // create node
-    RCCHECK(rclc_node_init_default(&node, "linorobot_base_node", "", &support));
+    RCCHECK(rclc_node_init_default(&node, node_name, namespace_node, &support));
     // create odometry publisher
     RCCHECK(rclc_publisher_init_default( 
         &odom_publisher, 
@@ -347,19 +356,19 @@ void createEntities()
         &left_range_publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-        "/tri_ir_sensor/left/range"));
+        "tri_ir_sensor/left/range"));
     // create right IR range publisher
     RCCHECK(rclc_publisher_init_best_effort(
         &right_range_publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-        "/tri_ir_sensor/right/range"));
+        "tri_ir_sensor/right/range"));
     // create middle IR range publisher
     RCCHECK(rclc_publisher_init_best_effort(
         &middle_range_publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Range),
-        "/tri_ir_sensor/middle/range"));
+        "tri_ir_sensor/middle/range"));
     // create IMU publisher
     RCCHECK(rclc_publisher_init_best_effort( 
         &imu_publisher, 
