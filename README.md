@@ -2,7 +2,7 @@
 
 This is a fork of the [Linorobot2 hardware repository](https://github.com/linorobot/linorobot2_hardware)
 
-# Installation
+## Installation
 
 All software mentioned in this guide must be installed on the robot computer.
 
@@ -35,7 +35,7 @@ and copy the file to /etc/udev/rules.d :
 
     sudo apt install screen
 
-# Calibration
+## Calibration
 
 Before proceeding, **ensure that your robot is elevated and the wheels aren't touching the ground**.
 5.1
@@ -92,7 +92,7 @@ Type `sample` and press the enter key. Verify if all encoder values are now **po
 
 On the previous instruction where you check the encoder reads for each motor, you'll see that there's also COUNTS PER REVOLUTION values printed on the screen. If you have defined `MOTOR_OPERATING_VOLTAGE` and `MOTOR_POWER_MEASURED_VOLTAGE`, you can assign these values to `COUNTS_PER_REVX` constants in [lino_base_config.h](https://github.com/linorobot/linorobot2_hardware/blob/master/config/lino_base_config.h#L55-L58) to have a more accurate model of the encoder.
 
-# Upload the firmware
+## Upload the firmware
 
 Ensure that the robot pass all the requirements before uploading the firmware:
 
@@ -118,7 +118,7 @@ For uploading the firmware with custom node name and namespace, then run:
     PLATFORMIO_BUILD_FLAGS="-DLINO_NAMESPACE=\\\"[YOURNAMESPACE]\\\" -DLINO_NODENAME=\\\"[YOURNODENAME]\\\"" pio run --target upload -e teensy41
 Where you change out [YOURNAMESPACE] and [YOURNODENAME] with whatever namespace and nodename you want.
 
-# Testing the robot
+## Testing the robot
 
 ## 1. Run the micro-ROS agent
 
