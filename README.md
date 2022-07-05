@@ -1,13 +1,19 @@
+# Description
+
 This is a fork of the [Linorobot2 hardware repository](https://github.com/linorobot/linorobot2_hardware)
-## Installation
+
+# Installation
+
 All software mentioned in this guide must be installed on the robot computer.
 
 ### 1. ROS2 and linorobot2 installation
+
 It is assumed that you already have ROS2 and linorobot2 package installed. If you haven't, go to [linorobot2](https://github.com/linorobot/linorobot2) package for installation guide.
 
 ### 2. Install PlatformIO
-Download and install platformio. [Platformio](https://platformio.org/) allows you to develop, configure, and upload the firmware without the Arduino IDE. This means that you can upload the firmware remotely which is ideal on headless setup especially when all components have already been fixed. 
-    
+
+Download and install platformio. [Platformio](https://platformio.org/) allows you to develop, configure, and upload the firmware without the Arduino IDE. This means that you can upload the firmware remotely which is ideal on headless setup especially when all components have already been fixed.
+
     python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
 
 Add platformio to your $PATH:
@@ -16,6 +22,7 @@ Add platformio to your $PATH:
     source $HOME/.bashrc
 
 ### 3. UDEV Rule
+
 Download the udev rules from Teensy's website:
 
     wget https://www.pjrc.com/teensy/00-teensy.rules
@@ -28,16 +35,20 @@ and copy the file to /etc/udev/rules.d :
 
     sudo apt install screen
 
-## Calibration
-Before proceeding, **ensure that your robot is elevated and the wheels aren't touching the ground**. 
+# Calibration
+
+Before proceeding, **ensure that your robot is elevated and the wheels aren't touching the ground**.
 5.1
+
 ### 1. Motor Check
+
 Go to calibration folder and upload the firmware:
 
     cd linorobot2_hardware/calibration
     pio run --target upload -e <your_teensy_board>
 
 Available Teensy boards:
+
 - teensy31
 - teensy35
 - teensy36
@@ -49,7 +60,7 @@ Some Linux machines might encounter a problem related to libusb. If so, install 
     sudo apt install libusb-dev
 
 Start spinning the motors by running:
-    
+
     screen /dev/ttyACM0
 
 !! Lift the robot up so that the wheels do not touch the ground !!
@@ -81,7 +92,8 @@ Type `sample` and press the enter key. Verify if all encoder values are now **po
 
 On the previous instruction where you check the encoder reads for each motor, you'll see that there's also COUNTS PER REVOLUTION values printed on the screen. If you have defined `MOTOR_OPERATING_VOLTAGE` and `MOTOR_POWER_MEASURED_VOLTAGE`, you can assign these values to `COUNTS_PER_REVX` constants in [lino_base_config.h](https://github.com/linorobot/linorobot2_hardware/blob/master/config/lino_base_config.h#L55-L58) to have a more accurate model of the encoder.
 
-## Upload the firmware
+# Upload the firmware
+
 Ensure that the robot pass all the requirements before uploading the firmware:
 
 - Defined the correct motor rpm.
@@ -105,9 +117,10 @@ For uploading the firmware with custom node name and namespace, then run:
     cd linorobot2_hardware/firmware
     PLATFORMIO_BUILD_FLAGS="-DLINO_NAMESPACE=\\\"[YOURNAMESPACE]\\\" -DLINO_NODENAME=\\\"[YOURNODENAME]\\\"" pio run --target upload -e teensy41
 Where you change out [YOURNAMESPACE] and [YOURNODENAME] with whatever namespace and nodename you want.
-## Testing the robot
 
-### 1. Run the micro-ROS agent.
+# Testing the robot
+
+## 1. Run the micro-ROS agent
 
 This will allow the robot to receive Twist messages to control the robot, and publish odometry and IMU data straight from the microcontroller. Compared to Linorobot's ROS1 version, the odometry and IMU data published from the microcontroller use standard ROS2 messages and do not require any relay nodes to reconstruct the data to complete [sensor_msgs/Imu](http://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/Imu.html) and [nav_msgs/Odometry](http://docs.ros.org/en/noetic/api/nav_msgs/html/msg/Odometry.html) messages.
 
@@ -115,16 +128,16 @@ Run the agent:
 
     ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0
 
-### 2. Drive around
+## 2. Drive around
 
 Run teleop_twist_keyboard package and follow the instructions on the terminal on how to drive the robot:
 
     ros2 run teleop_twist_keyboard teleop_twist_keyboard
 If you changed namespace, then you can remap the cmd_vel topic like this:
-    
+
     ros2 run teleop_twist_keyboard teleop_twist_keyboard cmd_vel:=/[YOURNAMESPACE]/cmd_vel
 
-### 3. Check the topics
+## 3. Check the topics
 
 Check if the odom and IMU data are published:
 
@@ -137,7 +150,7 @@ Now you should see the following topics:
     /odom/unfiltered
     /parameter_events
     /rosout
-    
+
 Or if you changed namespace:
 
     /[YOURNAMESPACE]/cmd_vel
@@ -153,5 +166,5 @@ Echo odometry data:
 Echo IMU data:
 
     ros2 topic echo /imu/data
-## Check the [Wiki](https://github.com/kajMork/linorobot2_hardware/wiki) for further information
 
+## Check the [Wiki](https://github.com/kajMork/linorobot2_hardware/wiki) for further information
