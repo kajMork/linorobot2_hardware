@@ -167,4 +167,20 @@ Echo IMU data:
 
     ros2 topic echo /imu/data
 
+## Update the firmware code / Uploading of updates Over The Air (OTA)
+
+On the robots there are a script to easily update the robots if the firmware is changed:
+
+1. Open a new terminal in root
+
+    - a)
+
+        SSH onto the robot computer e.g. via the use of putty SSH client: <https://itsfoss.com/putty-linux/>
+
+        Then run the following command
+
+        ``` bash
+        python3 Upload_firmware_code
+        ```
+
 ## Check the [Wiki](https://github.com/kajMork/linorobot2_hardware/wiki) for further information
