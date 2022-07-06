@@ -6,6 +6,10 @@ This is a fork of the [Linorobot2 hardware repository](https://github.com/linoro
 
 All software mentioned in this guide must be installed on the robot computer.
 
+This code is to be installed on the robot computer.
+
+This is done by connecting a mouse and keyboard to the robot computer. Then plug a monitor to the robot computer. From here:
+
 ### 1. ROS2 and linorobot2 installation
 
 It is assumed that you already have ROS2 and linorobot2 package installed. If you haven't, go to [linorobot2](https://github.com/linorobot/linorobot2) package for installation guide.
