@@ -63,8 +63,6 @@ Start spinning the motors by running:
 
     screen /dev/ttyACM0
 
-!! Lift the robot up so that the wheels do not touch the ground !!
-
 In the terminal type `spin` and press the enter key.
 
 The wheels will spin one by one for 10 seconds from Motor1 to Motor4. Check if each wheel's direction is spinning **forward** and take note of the motors that are spinning in the opposite direction. Set MOTORX_INV constant in [lino_base_config.h](https://github.com/linorobot/linorobot2_hardware/blob/master/config/lino_base_config.h#L71-L74) to `true` to invert the motor's direction. Reupload the calibration firmware once you're done. Press `Ctrl` + `a` + `d` to exit the screen terminal.
